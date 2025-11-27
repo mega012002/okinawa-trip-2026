@@ -1,0 +1,21 @@
+{
+  "name": "沖繩自駕行程",
+  "short_name": "沖繩之旅",
+  "description": "您的沖繩自駕旅遊計畫與實用工具。",
+  "start_url": "/okinawa_trip_app.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0077c2",
+  "icons": [
+    {
+      "src": "/images/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

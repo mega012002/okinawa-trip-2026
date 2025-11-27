@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>沖繩自駕行程 - 輕簡版</title>
+    <!-- PWA 相關設定 - START -->
+    <link rel="manifest" href="./manifest.json"> <!-- 指向 manifest 檔案 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="theme-color" content="#0077c2">
+    <!-- PWA 相關設定 - END -->
+    <!-- 載入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 日式極簡：乾淨、留白、柔和的陰影 */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f8fa; /* 非常淺的灰色背景 */
+        }
+        .app-shell {
+            max-width: 640px; /* 模擬手機邊界 */
+            margin: 0 auto;
+            min-height: 100vh;
+            background-color: white;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.05); /* 輕柔的邊界陰影 */
+        }
+        .card {
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+            transition: transform 0.3s ease;
+        }
+        .tab-active {
+            border-bottom: 3px solid #0077c2; /* 主題藍色 */
+            color: #0077c2;
+            font-weight: 600;
+        }
+        /* 導遊職責：亮色標籤 */
+        .tag-must-eat { background-color: #fca5a5; color: #7f1d1d; } /* 必吃美食: 柔和紅 */
+        .tag-must-buy { background-color: #fde68a; color: #854d0e; } /* 必買伴手禮: 柔和黃 */
+        .tag-must-order { background-color: #a7f3d0; color: #065f46; } /* 必點菜單: 柔和綠 */
+        .tag-code { background-color: #bfdbfe; color: #1e40af; } /* 預約代號: 柔和藍 */
+        /* 專門為自駕導航按鈕設計的極簡風格 */
+        .nav-btn {
+            background-color: #0077c2;
+            color: white;
+            transition: background-color 0.2s;
+        }
+        .nav-btn:hover { background-color: #005691; }
+    </style>
+</head>
+<body>
+
+<div class="app-shell">
+    <!-- 固定頂部 Header 和 Tab 導航 -->
+    <header class="sticky top-0 bg-white shadow-md z-10 p-4">
+        <h1 class="text-xl font-bold text-gray-800 text-center">沖繩自駕行程 (2/13 ~ 2/18)</h1>
+        
+        <!-- Tab 導航 -->
+        <div class="flex justify-around border-b mt-3 text-gray-500 text-sm">
+            <button class="py-3 px-2 flex-1 text-center tab-btn tab-active" data-tab="itinerary">
+                每日行程
+            </button>
+            <button class="py-3 px-2 flex-1 text-center tab-btn" data-tab="tools">
+                實用工具
+            </button>
+        </div>
+    </header>
+
+    <!-- 主要內容區塊 -->
+    <main class="p-4 pt-0">
+        <!-- 1. 行程 Tab 內容 -->
+        <div id="itinerary" class="tab-content">
+            <div id="itinerary-container" class="space-y-6">
+                <!-- 行程卡片將由 JS 動態生成 -->
+            </div>
+        </div>
+
+        <!-- 2. 工具 Tab 內容 -->
+        <div id="tools" class="tab-content hidden">
+            <div class="space-y-6">
+                <!-- 航班資訊 -->
+                <div class="card bg-gray-50 p-4 rounded-xl">
+                    <h2 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-3">✈️ 航班資訊</h2>
+                    <div class="text-sm space-y-2">
+                        <p><span class="font-medium">去程:</span> 2/13(五) [航班號] - [起飛時間] → Naha (OKA)</p>
+                        <p><span class="font-medium">回程:</span> 2/18(三) [航班號] - [起飛時間] → [抵達時間]</p>
+                        <p class="text-red-600 font-medium">請務必在還車後預留 2 小時到機場報到。</p>
+                        <input type="text" placeholder="輸入您的航班代碼..." class="w-full p-2 border rounded-lg mt-2 text-gray-600">
+                    </div>
+                </div>
+
+                <!-- 住宿資訊 -->
+                <div class="card bg-gray-50 p-4 rounded-xl">
+                    <h2 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-3">🏨 住宿資訊</h2>
+                    <div class="text-sm space-y-2">
+                        <p><span class="font-medium">2/13 (五):</span> 那霸市區飯店 (請填入)</p>
+                        <p><span class="font-medium">2/14-16 (六-一):</span> Hotel Nikko (或中部/北部飯店)</p>
+                        <p><span class="font-medium">2/17 (二):</span> 北谷或那霸市區飯店 (請填入)</p>
+                        <button onclick="copyToClipboard('請確認住宿地址')" class="mt-3 w-full nav-btn py-2 rounded-lg text-sm">複製所有住宿地址</button>
+                    </div>
+                </div>
+
+                <!-- 緊急聯絡電話 -->
+                <div class="card bg-gray-50 p-4 rounded-xl">
+                    <h2 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-3">📞 緊急聯絡電話</h2>
+                    <div class="text-sm space-y-2">
+                        <p><span class="font-medium">台灣駐日代表處 (那霸):</span> <a href="tel:+81-98-892-6020" class="text-blue-600 hover:underline">+81-98-892-6020</a></p>
+                        <p><span class="font-medium">日本緊急電話:</span> 警察: 110 / 救護車/消防: 119</p>
+                        <p><span class="font-medium">租車公司電話:</span> <span class="text-green-600">請務必填入!</span></p>
+                    </div>
+                </div>
+                
+                <!-- 記帳/預算表 (簡易版) -->
+                <div class="card bg-gray-50 p-4 rounded-xl">
+                    <h2 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-3">💰 記帳/預算表 (總覽)</h2>
+                    <div class="text-sm space-y-2">
+                        <div class="flex justify-between">
+                            <span class="font-medium">已花費:</span>
+                            <span id="total-spent" class="font-bold text-red-600">¥ 0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium">剩餘預算:</span>
+                            <span id="remaining-budget" class="font-bold text-green-600">¥ 0</span>
+                        </div>
+                        
+                        <input type="number" id="budget-input" placeholder="設定總預算 (日幣)" class="w-full p-2 border rounded-lg mt-4 text-gray-600">
+                        <div class="flex space-x-2 mt-2">
+                            <input type="text" id="expense-desc" placeholder="項目描述 (如: 午餐)" class="flex-1 p-2 border rounded-lg text-gray-600">
+                            <input type="number" id="expense-amount" placeholder="金額 (日幣)" class="w-1/3 p-2 border rounded-lg text-gray-600">
+                            <button onclick="addExpense()" class="bg-indigo-500 hover:bg-indigo-600 text-white p-2 rounded-lg text-xs font-semibold">記帳</button>
+                        </div>
+
+                        <ul id="expense-list" class="mt-4 border-t pt-3 space-y-1 max-h-40 overflow-y-auto">
+                            <!-- 記帳紀錄將由 JS 動態生成 -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 底部版權佔位，增強 APP 視覺感 -->
+    <footer class="text-center text-xs text-gray-400 p-2 border-t mt-4">
+        Okinawa Trip Planner - 2024
+    </footer>
+
+</div>
+
+<script>
+    // ============== 資料區塊 (行程內容) ==============
+    const tripData = [
+        {
+            date: "2/13(五)", dayName: "抵達日 (南部)", weatherLocation: "那霸",
+            attractions: [
+                { name: "那霸機場 (Naha Airport)", notes: "抵達 & 辦理手續" },
+                { name: "租車公司", notes: "取車 (預計20分鐘)" },
+                { name: "國際通 (Kokusai Street)", notes: "下午逛街, 晚上小吃 (預計15分鐘車程)" },
+                { name: "飯店 (那霸市區)", notes: "Check-in (約1小時車程)" },
+            ],
+            restaurants: [
+                { type: "午餐 (隨選)", name: "花笠食堂 / 大東壽司 / 豬肉蛋飯糰 (國際通附近)" },
+                { type: "晚餐 (隨興)", name: "國際通隨興小吃" },
+            ],
+            guide: {
+                title: "【自駕攻略】那霸市區",
+                tips: "抵達那霸機場後請留意租車公司的接駁車指示牌。國際通周邊停車位較少且貴，建議先將行李放在飯店再徒步前往。",
+                highlights: [
+                    { key: "必吃美食", value: "花笠食堂、豬肉蛋飯糰、Blue Seal冰淇淋" },
+                    { key: "必買伴手禮", value: "御菓子御殿紅芋塔、雪鹽商品" },
+                ],
+            },
+            accommodation: "那霸市區飯店 (待確認)",
+        },
+        {
+            date: "2/14(六)", dayName: "琉球文化 & 南部海島", weatherLocation: "南城 / 瀨長島",
+            attractions: [
+                { name: "沖繩世界文化王國 (玉泉洞)", notes: "停留2hr, 鐘乳石洞與王國村" },
+                { name: "琉染珊瑚拓印", notes: "體驗活動 (1hr)" },
+                { name: "瀨長島 (Senaga Island)", notes: "下午茶、看飛機起降及日落" },
+            ],
+            restaurants: [
+                { type: "午餐", name: "山内食堂 (南城) - 必吃豬腳麵 (約10分鐘車程)" },
+                { type: "晚餐 (隨選)", name: "瀨長島47都道府縣餐廳 或 花織そば (回飯店方向)" },
+            ],
+            guide: {
+                title: "【玉泉洞 & 瀨長島攻略】",
+                tips: "沖繩世界文化王國的太鼓秀（Eisa Drum Show）通常在下午有場次，請提前確認時間，強烈推薦觀賞！玉泉洞內較濕滑，請穿著防滑鞋。瀨長島的『幸福鬆餅』是人氣下午茶。",
+                highlights: [
+                    { key: "必吃美食", value: "山内食堂（豬腳麵）、瀨長島幸福鬆餅、玉泉洞內 Nanto屋沖繩麵" },
+                    { key: "必買伴手禮", value: "琉染珊瑚拓印的獨家紀念品" },
+                    { key: "重要預約代號", value: "琉染拓印: RYSN1400 / 太鼓秀時段: 14:30" },
+                ],
+            },
+            accommodation: "Hotel Nikko (中部/恩納)",
+        },
+        {
+            date: "2/15(日)", dayName: "北部美景 & 海洋探險", weatherLocation: "名護 / 恩納",
+            attractions: [
+                { name: "名護鳳梨園", notes: "約1hr車程，停留1.5hr" },
+                { name: "Panza Zipline (滑索)", notes: "體驗 (2hr, 需預約)" },
+                { name: "青之洞窟浮潛", notes: "恩納村，2~3hr (需預約)" },
+            ],
+            restaurants: [
+                { type: "午餐 (極推)", name: "百年古家 大家 (名護) - 必吃阿古豬 (約15分鐘車程)" },
+                { type: "晚餐 (隨選)", name: "琉球の牛 (需預約) / 浜屋そば (北谷)" },
+            ],
+            guide: {
+                title: "【名護 & 恩納攻略】",
+                tips: "青之洞窟浮潛受天氣影響大，請務必提前預約並確認當日海況。鳳梨園的鳳梨車很有趣，可以試試。大家(Ufuya)餐廳最好預約晚餐時段，氣氛極佳。",
+                highlights: [
+                    { key: "必吃美食", value: "百年古家大家 (阿古豬涮涮鍋)、琉球の牛 (頂級燒肉)、浜屋そば" },
+                    { key: "必點菜單", value: "大家餐廳：極上特選阿古豬涮涮鍋、特製泡芙" },
+                    { key: "重要預約代號", value: "青之洞窟浮潛: GDV-2025 / 琉球の牛預約: LQN0215" },
+                ],
+            },
+            accommodation: "Hotel Nikko (中部/恩納)",
+        },
+        {
+            date: "2/16(一)", dayName: "中部動態體驗", weatherLocation: "宜野灣 / 金武町",
+            attractions: [
+                { name: "宜野灣滑翔傘", notes: "體驗 1.5hr (需預約)" },
+                { name: "金武町 紅樹林獨木舟+釣魚", notes: "體驗 3hr (需預約)" },
+            ],
+            restaurants: [
+                { type: "午餐", name: "中村家 (宜野灣) (約15分鐘車程)" },
+                { type: "晚餐 (隨選)", name: "島やさい食堂てい一あんだ / 花織そば (約10-20分鐘車程)" },
+            ],
+            guide: {
+                title: "【宜野灣 & 金武町攻略】",
+                tips: "滑翔傘和獨木舟都是戶外活動，需穿著輕便衣物，並注意防曬。獨木舟體驗請記得攜帶防水袋保護手機。",
+                highlights: [
+                    { key: "必吃美食", value: "中村家 (沖繩麵)、金武町塔可飯 (Taco Rice)" },
+                    { key: "必買伴手禮", value: "紅樹林體驗處可能有當地特色手工藝品" },
+                    { key: "重要預約代號", value: "滑翔傘: PSC-0216 / 獨木舟: KMC-M0930" },
+                ],
+            },
+            accommodation: "Hotel Nikko (中部/恩納)",
+        },
+        {
+            date: "2/17(二)", dayName: "北谷/那霸轉移 & 購物", weatherLocation: "宜野座 / 北谷",
+            attractions: [
+                { name: "越野車體驗 (PANZA 宜野座等)", notes: "體驗 1.5hr (需預約)" },
+                { name: "直升機巡遊", notes: "那霸/北谷 (需預約，30-60分鐘)" },
+                { name: "北谷美國村 (American Village)", notes: "晚上逛街" },
+            ],
+            restaurants: [
+                { type: "午餐", name: "道の駅許田 (許田休息站) (約20分鐘車程)" },
+                { type: "晚餐 (隨選)", name: "北谷美國村: Gordie's / A&W (美式漢堡) 或 那霸: 波布食堂 (份量驚人)" },
+            ],
+            guide: {
+                title: "【美國村 & 購物攻略】",
+                tips: "美國村的日落海灘景色非常美，推薦傍晚前往。波布食堂以其巨無霸份量聞名，挑戰前請三思！",
+                highlights: [
+                    { key: "必吃美食", value: "Gordie's (美式漢堡)、A&W (美式速食)、波布食堂 (巨無霸餐點)" },
+                    { key: "必買伴手禮", value: "美國村內的美軍紀念品、特色服飾" },
+                    { key: "重要預約代號", value: "直升機巡遊: HELI-0217" },
+                ],
+            },
+            accommodation: "北谷或那霸市區飯店",
+        },
+        {
+            date: "2/18(三)", dayName: "購物 & 賦歸", weatherLocation: "那霸",
+            attractions: [
+                { name: "那霸市區購物", notes: "國際通/DFS (1hr)" },
+                { name: "租車公司", notes: "還車 (預計20分鐘)" },
+                { name: "那霸機場", notes: "搭機返家" },
+            ],
+            restaurants: [],
+            guide: {
+                title: "【最後衝刺購物 & 還車】",
+                tips: "DFS T Galleria免稅店在國際通附近，建議先逛再還車。還車前請務必將油箱加滿，並預留充足時間辦理還車手續及前往機場。",
+                highlights: [
+                    { key: "必買伴手禮", value: "DFS免稅精品、國際通特色酒類（泡盛）、沖繩黑糖" },
+                ],
+            },
+            accommodation: "家",
+        },
+    ];
+
+    // ============== 核心 JS 邏輯 ==============
+
+    // 1. Tab 切換功能
+    document.querySelectorAll('.tab-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('tab-active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+
+            this.classList.add('tab-active');
+            document.getElementById(this.dataset.tab).classList.remove('hidden');
+        });
+    });
+
+    // 2. 導航連結生成器 (Google Maps)
+    function generateNavigationLink(locationName) {
+        // 使用 URL 編碼確保地址正確傳遞給 Google Maps
+        const encodedName = encodeURIComponent(locationName + " 沖繩");
+        return `https://www.google.com/maps/search/?api=1&query=${encodedName}`;
+    }
+
+    // 3. 亮點標籤生成器
+    function getTagClass(key) {
+        switch (key) {
+            case "必吃美食": return "tag-must-eat";
+            case "必買伴手禮": return "tag-must-buy";
+            case "必點菜單": return "tag-must-order";
+            case "重要預約代號": return "tag-code";
+            default: return "bg-gray-200 text-gray-700";
+        }
+    }
+    
+    // 4. 行程卡片生成
+    function renderItinerary() {
+        const container = document.getElementById('itinerary-container');
+        container.innerHTML = tripData.map(day => `
+            <!-- 每日行程卡片 -->
+            <div class="card bg-white p-4 rounded-xl shadow-lg">
+                <h2 class="text-xl font-extrabold text-[#005691] border-b-2 border-dashed border-gray-100 pb-2 mb-3">
+                    ${day.date} (${day.dayName})
+                </h2>
+
+                <!-- 模擬天氣預報卡片 (即時天氣需要 API 支援，此處為 UI 佔位) -->
+                <div class="flex items-center justify-between p-3 mb-4 rounded-lg bg-indigo-50/70 border border-indigo-100">
+                    <div class="flex items-center space-x-2">
+                        <!-- 假定天氣圖示 (使用 emoji 模擬) -->
+                        <span class="text-3xl">🌤️</span>
+                        <div>
+                            <p class="text-xs text-gray-500">即時天氣 (地點: ${day.weatherLocation})</p>
+                            <p class="font-bold text-gray-800">18°C ~ 22°C (多雲偶晴)</p>
+                        </div>
+                    </div>
+                    <span class="text-xs text-indigo-600 font-medium">更新時間: 11:00 AM</span>
+                </div>
+
+                <!-- 景點/交通卡片 -->
+                <div class="space-y-4">
+                    <h3 class="text-base font-semibold text-gray-700 mb-2 border-l-4 border-yellow-500 pl-2">📍 景點 / 體驗 (Attractions)</h3>
+                    ${day.attractions.map(item => `
+                        <div class="flex justify-between items-center text-sm border-b pb-2">
+                            <div>
+                                <p class="font-medium text-gray-800">${item.name}</p>
+                                <p class="text-xs text-gray-500">${item.notes}</p>
+                            </div>
+                            <!-- 導航按鈕 -->
+                            <a href="${generateNavigationLink(item.name)}" target="_blank" class="nav-btn flex items-center px-3 py-1 text-xs rounded-full shadow-md whitespace-nowrap">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                導航
+                            </a>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <!-- 餐廳/午晚餐卡片 -->
+                <div class="mt-6 space-y-4">
+                    <h3 class="text-base font-semibold text-gray-700 mb-2 border-l-4 border-green-500 pl-2">🍜 餐廳 / 美食 (Dining)</h3>
+                    ${day.restaurants.map(item => `
+                        <div class="flex justify-between items-center text-sm border-b pb-2">
+                            <div>
+                                <p class="font-medium text-gray-800">${item.name}</p>
+                                <p class="text-xs text-gray-500 italic">${item.type}</p>
+                            </div>
+                            <a href="${generateNavigationLink(item.name)}" target="_blank" class="nav-btn flex items-center px-3 py-1 text-xs rounded-full shadow-md whitespace-nowrap">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                導航
+                            </a>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <!-- 導遊職責/攻略卡片 (特別分析與亮點標註) -->
+                <div class="mt-6 border-t pt-4">
+                    <h3 class="text-base font-semibold text-gray-700 mb-3 border-l-4 border-red-500 pl-2">💡 導遊分析與攻略</h3>
+                    <p class="text-xs text-gray-600 italic mb-3">${day.guide.tips}</p>
+                    <div class="flex flex-wrap gap-2">
+                        ${day.guide.highlights.map(h => `
+                            <span class="text-xs font-bold px-3 py-1 rounded-full ${getTagClass(h.key)}">
+                                ${h.key}: ${h.value}
+                            </span>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- 住宿地點 -->
+                <div class="mt-4 pt-3 border-t">
+                    <p class="text-sm font-medium text-gray-600">🏠 當晚住宿: <span class="text-gray-800">${day.accommodation}</span></p>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // 5. 記帳/預算功能
+    let budget = 0;
+    let expenses = [];
+    
+    function updateBudgetDisplay() {
+        const totalSpent = expenses.reduce((sum, item) => sum + item.amount, 0);
+        const remaining = budget - totalSpent;
+        document.getElementById('total-spent').textContent = `¥ ${totalSpent.toLocaleString()}`;
+        document.getElementById('remaining-budget').textContent = `¥ ${remaining.toLocaleString()}`;
+        document.getElementById('remaining-budget').classList.toggle('text-red-600', remaining < 0);
+        document.getElementById('remaining-budget').classList.toggle('text-green-600', remaining >= 0);
+    }
+
+    document.getElementById('budget-input').addEventListener('input', (e) => {
+        budget = parseInt(e.target.value) || 0;
+        updateBudgetDisplay();
+    });
+
+    function addExpense() {
+        const desc = document.getElementById('expense-desc').value.trim();
+        const amount = parseInt(document.getElementById('expense-amount').value);
+
+        if (desc && amount > 0) {
+            expenses.push({ desc, amount, id: Date.now() });
+            
+            // 清空輸入
+            document.getElementById('expense-desc').value = '';
+            document.getElementById('expense-amount').value = '';
+
+            // 更新列表
+            renderExpenseList();
+            updateBudgetDisplay();
+        }
+    }
+
+    function renderExpenseList() {
+        const list = document.getElementById('expense-list');
+        list.innerHTML = expenses.map(item => `
+            <li class="flex justify-between text-xs text-gray-700 border-b border-gray-100 py-1">
+                <span>${item.desc}</span>
+                <span class="font-semibold text-red-500">- ¥ ${item.amount.toLocaleString()}</span>
+            </li>
+        `).join('');
+    }
+
+    // 6. 輔助工具：複製到剪貼板
+    function copyToClipboard(text) {
+        // 使用 document.execCommand('copy') 作為 iframe 環境下的兼容方案
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed'; // 防止滾動
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        try {
+            document.execCommand('copy');
+            // 這裡我們用簡單的 UI 提示取代 alert()
+            const msg = document.createElement('div');
+            msg.textContent = '已複製到剪貼板!';
+            msg.className = 'fixed top-4 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-xl text-sm z-50 transition-opacity duration-300';
+            document.body.appendChild(msg);
+            setTimeout(() => {
+                msg.remove();
+            }, 1500);
+        } catch (err) {
+            console.error('無法複製', err);
+        }
+        document.body.removeChild(textarea);
+    }
+    
+    // 將 copyToClipboard 函數暴露到 window 供 HTML 調用
+    window.copyToClipboard = copyToClipboard;
+    window.addExpense = addExpense;
+
+
+    // 7. 應用程式初始化
+    document.addEventListener('DOMContentLoaded', () => {
+        renderItinerary();
+        updateBudgetDisplay(); // 初始化預算顯示
+
+        // PWA 註冊 Service Worker
+        if ('serviceWorker' in navigator) {
+            // 確保路徑是正確的。如果 service-worker.js 在根目錄，使用 /service-worker.js
+            // 在 GitHub Pages 的子目錄環境下，使用 './service-worker.js' 通常更安全
+            navigator.serviceWorker.register('./service-worker.js')
+                .then(reg => console.log('Service Worker 註冊成功:', reg.scope))
+                .catch(err => console.error('Service Worker 註冊失敗:', err));
+        }
+    });
+
+</script>
+</body>
+</html>
